@@ -8,10 +8,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.reactivestreams.Publisher;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -47,5 +49,30 @@ class VendorControllerTest {
                 .uri("/api/v1/vendor/1/")
                 .exchange()
                 .expectBody(Vendor.class);
+    }
+
+    @Test
+    void testCreateVendor(){
+        when(vendorRepo.saveAll(any(Publisher.class))).thenReturn(Flux.just(new Vendor()));
+        Mono<Vendor> mono = Mono.just(new Vendor());
+        webTestClient.post()
+                .uri("/api/v1/vendor/")
+                .body(mono,Vendor.class)
+                .exchange()
+                .expectStatus()
+                .isCreated();
+    }
+
+    @Test
+    void testUpdateVendor(){
+        when(vendorRepo.findById(anyString())).thenReturn(Mono.just(new Vendor()));
+        when(vendorRepo.save(any())).thenReturn(Mono.just(new Vendor()));
+        Mono<Vendor> mono = Mono.just(new Vendor());
+        webTestClient.put()
+                .uri("/api/v1/vendor/1/")
+                .body(mono,Vendor.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
     }
 }

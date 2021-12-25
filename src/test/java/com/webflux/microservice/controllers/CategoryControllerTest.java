@@ -7,10 +7,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.reactivestreams.Publisher;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -48,5 +50,30 @@ class CategoryControllerTest {
                 .uri("/api/v1/category/1")
                 .exchange()
                 .expectBody(Category.class);
+    }
+
+    @Test
+    void createCategory(){
+        when(categoryRepo.saveAll(any(Publisher.class))).thenReturn(Flux.just(new Category()));
+        Mono<Category> mono = Mono.just(new Category());
+        webTestClient.post()
+                .uri("/api/v1/category/")
+                .body(mono,Category.class)
+                .exchange()
+                .expectStatus()
+                .isCreated();
+    }
+
+    @Test
+    void updateCategory(){
+        when(categoryRepo.save(any(Category.class))).thenReturn(Mono.just(new Category()));
+        when(categoryRepo.findById(anyString())).thenReturn(Mono.just(new Category()));
+        Mono<Category> mono = Mono.just(Category.builder().build());
+        webTestClient.put()
+                .uri("/api/v1/category/1/")
+                .body(mono,Category.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
     }
 }
